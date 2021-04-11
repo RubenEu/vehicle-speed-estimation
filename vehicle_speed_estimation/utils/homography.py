@@ -1,7 +1,6 @@
 import numpy as np
 import cv2
 import copy
-from typing import Tuple, List
 
 from simple_object_detection.typing import Point2D
 from simple_object_tracking.typing import SequenceInformation
