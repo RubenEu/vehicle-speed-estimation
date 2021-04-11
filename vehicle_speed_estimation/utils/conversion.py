@@ -1,0 +1,5 @@
+METERS_TO_KILOMETERS = 1 / 1000
+SECOND_TO_HOUR = 3600
+METERS_PER_SECOND_TO_KILOMETERS_PER_HOUR = METERS_TO_KILOMETERS * SECOND_TO_HOUR
+
+# TODO: Funciones de conversión con píxels y frames dados los datos.
