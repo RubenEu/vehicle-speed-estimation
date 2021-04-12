@@ -1,0 +1,1 @@
+from vehicle_speed_estimation.models.average import TwoPositionsSpeedAverage
