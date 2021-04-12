@@ -22,22 +22,17 @@ class EstimationModel(ABC):
         BOTTOM_LEFT_CORNER = 4
 
     def __init__(self,
-                 pixel_x_to_meters: float,
-                 pixel_y_to_meters: float,
+                 pixel_to_meters: Tuple[float, float],
                  seconds_per_frame: float,
                  point_selection: ObjectPoint = ObjectPoint.CENTROID):
         """
 
-        :param pixel_x_to_meters: factor de conversión de un píxel en el eje x a cuántos metros
-        corresponde.
-        :param pixel_y_to_meters: factor de conversión de un píxel en el eje y a cuántos metros
-        corresponde.
+        :param pixel_to_meters: vector de factor de conversión de un píxel a metros.
         :param seconds_per_frame: tiempo (s) que dura cada frame.
         :param point_selection: elegir el punto que se utilizará para realizar los cálculos de la
         posición del vehículo.
         """
-        self.pixel_x_to_meters = pixel_x_to_meters
-        self.pixel_y_to_meters = pixel_y_to_meters
+        self.pixel_to_meters = pixel_to_meters
         self.seconds_per_frame = seconds_per_frame
         self.point_selection = point_selection
 
@@ -53,14 +48,14 @@ class EstimationModel(ABC):
 
     def distance_vector_px_to_km(self,
                                  distance_px_vector: Tuple[float, float]) -> Tuple[float, float]:
-        distance_vector_km = (distance_px_vector[0] * self.pixel_x_to_meters / METERS_TO_KILOMETERS,
-                              distance_px_vector[1] * self.pixel_y_to_meters / METERS_TO_KILOMETERS)
-        return distance_vector_km
+        distance_km = (distance_px_vector[0] * self.pixel_to_meters[0] / METERS_TO_KILOMETERS,
+                       distance_px_vector[1] * self.pixel_to_meters[1] / METERS_TO_KILOMETERS)
+        return distance_km
 
     def speed_vector_px_frame_to_kmh(self, speed_px_f: Tuple[float, float]) -> Tuple[float, float]:
         # Convertir a m/s primeramente.
-        speed_vector_m_s = (speed_px_f[0] * self.pixel_x_to_meters / self.seconds_per_frame,
-                            speed_px_f[1] * self.pixel_y_to_meters / self.seconds_per_frame)
+        speed_vector_m_s = (speed_px_f[0] * self.pixel_to_meters[0] / self.seconds_per_frame,
+                            speed_px_f[1] * self.pixel_to_meters[1] / self.seconds_per_frame)
         speed_vector_kmh = (speed_vector_m_s[0] * METERS_PER_SECOND_TO_KILOMETERS_PER_HOUR,
                             speed_vector_m_s[1] * METERS_PER_SECOND_TO_KILOMETERS_PER_HOUR)
         return speed_vector_kmh
