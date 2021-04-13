@@ -21,20 +21,28 @@ class EstimationModel(ABC):
         BOTTOM_RIGHT_CORNER = 3
         BOTTOM_LEFT_CORNER = 4
 
+    class Units(Enum):
+        PIXELS_FRAME = 0
+        METERS_SECOND = 1
+        KILOMETERS_HOURS = 2
+
     def __init__(self,
                  pixel_to_meters: Tuple[float, float],
                  seconds_per_frame: float,
-                 point_selection: ObjectPoint = ObjectPoint.CENTROID):
+                 point_selection: ObjectPoint = ObjectPoint.CENTROID,
+                 units: Units = Units.KILOMETERS_HOURS):
         """
 
         :param pixel_to_meters: vector de factor de conversión de un píxel a metros.
         :param seconds_per_frame: tiempo (s) que dura cada frame.
         :param point_selection: elegir el punto que se utilizará para realizar los cálculos de la
         posición del vehículo.
+        :param units: unidades para la medida de la distancia, tiempo y velocidad.
         """
         self.pixel_to_meters = pixel_to_meters
         self.seconds_per_frame = seconds_per_frame
         self.point_selection = point_selection
+        self.units = units
 
     def get_object_point(self, object_detection: Object) -> Point2D:
         points = {
@@ -59,38 +67,3 @@ class EstimationModel(ABC):
         speed_vector_kmh = (speed_vector_m_s[0] * METERS_PER_SECOND_TO_KILOMETERS_PER_HOUR,
                             speed_vector_m_s[1] * METERS_PER_SECOND_TO_KILOMETERS_PER_HOUR)
         return speed_vector_kmh
-    #
-    # @abstractmethod
-    # def calculate_distance(self, object_history: ObjectHistory, **kwargs) -> Tuple[float, float]:
-    #     """Calcula la distancia en píxeles.
-    #
-    #     Este método debe ser implementado.
-    #
-    #     :param object_history: historial del objeto [(frame, detección), ...]
-    #     :param kwargs:
-    #     :return: vector de distancia calculada en píxeles.
-    #     """
-    #
-    # @abstractmethod
-    # def calculate_time(self, object_history: ObjectHistory, **kwargs) -> float:
-    #     """Calcula el tiempo transcurrido en frames, es decir, la cantidad de frames transcurridos.
-    #
-    #     Este método debe ser implementado.
-    #
-    #     :param object_history: historial del objeto [(frame, detección), ...]
-    #     :param kwargs:
-    #     :return: cantidad de frames transcurridos.
-    #     """
-    #
-    # @abstractmethod
-    # def calculate_speed(self, object_history: ObjectHistory, **kwargs) -> Tuple[float, float]:
-    #     """Calcula la velocidad en píxeles/frames.
-    #
-    #     Este método debe ser implementado.
-    #
-    #     :param object_history: historial del objeto [(frame, detección), ...]
-    #     :param kwargs:
-    #     :return: vector de velocidad en píxeles/frames.
-    #     """
-    #
-
