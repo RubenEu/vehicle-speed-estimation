@@ -1,10 +1,9 @@
-import numpy as np
-import cv2
 import copy
+import cv2
+import numpy as np
 
-from simple_object_detection.typing import Point2D
-from simple_object_tracking.typing import SequenceInformation
-from simple_object_tracking.datastructures import SequenceObjects
+from simple_object_detection.typing import Point2D, Image, BoundingBox
+from simple_object_tracking.datastructures import TrackedObjects
 
 
 def apply_homography_point2d(point: Point2D, h: np.ndarray) -> Point2D:
@@ -15,43 +14,40 @@ def apply_homography_point2d(point: Point2D, h: np.ndarray) -> Point2D:
     :return: punto 2D en el plano de la homografía.
     """
     x, y, k, = h @ (point[0], point[1], 1)
-    return int(x / k), int(y / k)
+    return Point2D(int(x / k), int(y / k))
 
 
-def apply_homography_sequence(sequence_with_information: SequenceInformation,
-                              h: np.ndarray) -> SequenceInformation:
-    """Aplicar la homografía a la secuencia.
+def apply_homography_frame(frame: Image, h: np.ndarray) -> Image:
+    """Aplica la homografía a un frame.
 
-    :param sequence_with_information: información de la secuencia y la propia secuencia. Tupla
-    (width, height, fps, sequence, timestamps).
+    :param frame: imagen.
     :param h: matriz de homografía.
-    :return: tupla de la secuencia e información con la homografía aplicada
-    (width, height, fps, sequence, timestamps).
+    :return: frame con la homografía aplicada.
     """
-    width, height, fps, sequence, timestamps = sequence_with_information
-    # Realizar una copia de la secuencia para no editar la original.
-    sequence_warped = [frame.copy() for frame in sequence]
-    # Aplicar la homografía a cada frame.
-    for frame_id, frame in enumerate(sequence_warped):
-        sequence_warped[frame_id] = cv2.warpPerspective(frame, h, (width, height))
-    return width, height, fps, sequence_warped, timestamps
+    height, width, _ = frame.shape
+    # Copiar frame para no editarlo.
+    frame = frame.copy()
+    # Aplicar homografía y devolverlo
+    frame_h = cv2.warpPerspective(frame, h, (width, height))
+    return frame_h
 
 
-def apply_homography_objects(objects: SequenceObjects, h: np.ndarray) -> SequenceObjects:
+def apply_homography_objects(tracked_objects: TrackedObjects, h: np.ndarray) -> TrackedObjects:
     """Aplicar la homografía al seguimiento de los objetos.
 
-    :param objects: secuencia de objetos (seguimiento).
+    :param tracked_objects: secuencia de objetos (seguimiento).
     :param h: matriz de homografía.
     :return: secuencia de objetos con la homografía aplicada.
     """
-    objects = copy.deepcopy(objects)
-    # Iterar sobre todos los objetos guardados.
-    for obj_uid in range(len(objects)):
-        # Aplicar a cada uno de sus registros.
-        for frame_seen, object_detected in objects.object_uid(obj_uid):
+    tracked_objects = copy.deepcopy(tracked_objects)
+    # Iterar sobre todos los objetos seguidos.
+    for tracked_object in tracked_objects:
+        # Aplicar a cada una de sus detecciones en el seguimiento.
+        for object_detection in tracked_object:
+            object_ = object_detection.object
             # Homografía al centro.
-            object_detected.center = apply_homography_point2d(object_detected.center, h)
-            # Homografía a las cajas delimitadoras.
-            object_detected.bounding_box = tuple(
-                apply_homography_point2d(point, h) for point in object_detected.bounding_box)
-    return objects
+            object_.center = apply_homography_point2d(object_.center, h)
+            # Homografía a la bounding box.
+            bounding_box_h = tuple(apply_homography_point2d(p, h) for p in object_.bounding_box)
+            object_.bounding_box = BoundingBox(*bounding_box_h)
+    return tracked_objects
