@@ -1,8 +1,83 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from enum import Enum
+from typing import List
+import numpy as np
 
 from simple_object_detection.object import Object
 from simple_object_detection.typing import Point2D, FloatVector2D
+from simple_object_tracking.datastructures import TrackedObjects, TrackedObject
+
+
+class EstimationResult:
+    """Resultados de una estimación.
+    """
+    def __init__(self, velocities: List[FloatVector2D], tracked_object: TrackedObject):
+        """
+
+        :param velocities: lista de velocidades.
+        :param tracked_object: objeto seguido.
+        """
+        self.velocities = velocities
+        self.tracked_object = tracked_object
+
+    def mean_velocity(self) -> FloatVector2D:
+        """Calcula el vector de velocidad media.
+
+        :return: vector de velocidad media.
+        """
+        return np.array(self.velocities).mean(axis=0)
+
+    def mean_speed(self) -> float:
+        """Calcula el módulo de la velocidad media.
+
+        :return: módulo de la velocidad media.
+        """
+        mean_velocity = np.array(self.velocities).mean(axis=0)
+        return np.linalg.norm(mean_velocity)
+
+
+class EstimationResults:
+    """Resultados de un modelo de estimación.
+
+    TODO: Tener en cuenta vehículos válidos.
+    """
+    def __init__(self):
+        self._estimations_results: List[EstimationResult] = []
+
+    def __getitem__(self, item: int) -> EstimationResult:
+        """Devuelve la estimación item-ésima.
+
+        :param item: índice de la estimación.
+        :return: resultado de la estimación.
+        """
+        if item >= len(self._estimations_results):
+            raise IndexError(f'El índice {item} está fuera del límite.')
+        return self._estimations_results[item]
+
+    def add(self, estimation_result: EstimationResult) -> None:
+        """Añade un resultado de una estimación.
+
+        :param estimation_result: estimación.
+        :return: None.
+        """
+        self._estimations_results.append(estimation_result)
+
+    def velocity_mse(self, expected_) -> FloatVector2D:
+        raise NotImplemented()
+
+    def speed_mse(self, expected_speeds: List[float]) -> float:
+        """Calcula el error cuadrático medio del módulo de las velocidades.
+
+        :param expected_speeds: lista con las velocidades esperadas.
+        :return: error cuadrático medio.
+        """
+        # Comprobar que tienen las mismas dimensiones.
+        if len(self._estimations_results) != len(expected_speeds):
+            raise Exception('La lista de velocidades introducida no tiene la dimensión esperada.')
+        # Calcular MSE.
+        estimated_speeds = np.array([result.mean_speed() for result in self._estimations_results])
+        expected_speeds = np.array(expected_speeds)
+        return ((estimated_speeds - expected_speeds) ** 2).mean(axis=0)
 
 
 class EstimationModel(ABC):
@@ -90,3 +165,11 @@ class EstimationModel(ABC):
             self.ObjectPoint.BOTTOM_LEFT_CORNER: object_detection.bounding_box[3]
         }
         return points[self.object_point]
+
+    @abstractmethod
+    def fit(self, tracked_objects: TrackedObjects) -> EstimationResults:
+        """Realizar la estimación del modelo.
+
+        :param tracked_objects: estructura con los seguimientos de los objetos.
+        :return: estimaciones calculadas.
+        """

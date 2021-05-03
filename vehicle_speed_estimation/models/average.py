@@ -1,9 +1,10 @@
 import numpy as np
 
 from simple_object_detection.typing import FloatVector2D
-from simple_object_tracking.datastructures import TrackedObject
+from simple_object_tracking.datastructures import TrackedObject, TrackedObjects
 
-from vehicle_speed_estimation.estimation_model import EstimationModel
+from vehicle_speed_estimation.estimation_model import EstimationModel, EstimationResults, \
+    EstimationResult
 
 
 class TwoPositionsSpeedAverage(EstimationModel):
@@ -42,7 +43,7 @@ class TwoPositionsSpeedAverage(EstimationModel):
     def calculate_time(self,
                        tracked_object: TrackedObject,
                        index_initial: int = 0,
-                       index_final: int = -1):
+                       index_final: int = -1) -> float:
         """Calcula el tiempo transcurrido entre las dos detecciones del objeto.
 
         :param tracked_object: objeto seguido.
@@ -58,7 +59,7 @@ class TwoPositionsSpeedAverage(EstimationModel):
     def calculate_speed(self,
                         tracked_object: TrackedObject,
                         index_initial: int = 0,
-                        index_final: int = -1):
+                        index_final: int = -1) -> FloatVector2D:
         """Calcula la velocidad media entre las dos detecciones introducidas por parámetro.
 
         :param tracked_object: objeto seguido.
@@ -69,4 +70,16 @@ class TwoPositionsSpeedAverage(EstimationModel):
         distance = self.calculate_distance(tracked_object, index_initial, index_final)
         time = self.calculate_time(tracked_object, index_initial, index_final)
         speed = distance.x / time, distance.y / time
-        return speed
+        return FloatVector2D(*speed)
+
+    def fit(self, tracked_objects: TrackedObjects) -> EstimationResults:
+        estimation_results = EstimationResults()
+        # Realizar la estimación de cada objeto seguido.
+        for tracked_object in tracked_objects:
+            estimated_speed = self.calculate_speed(tracked_object)
+            estimation = EstimationResult([estimated_speed], tracked_object)
+            # Añadir a la lista de estimaciones.
+            estimation_results.add(estimation)
+        return estimation_results
+
+
