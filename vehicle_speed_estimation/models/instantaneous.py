@@ -85,7 +85,7 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
                        for x in positions])
         # Variables del modelo.
         kernel = self.kernel
-        kernel_ = self.kernel_derivated
+        kernel_derivated = self.kernel_derivated
         h = self.bandwidth
         # Calcular los vectores de velocidad.
         speeds = list()
@@ -93,16 +93,16 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
             # i-índices.
             indexes = range(0, len(ts))
             # Calcular el numerador y denominador por partes.
-            n1 = np.array([kernel_(t, ts[i], h) * xs[i] for i in indexes]).sum(axis=0)
+            n1 = np.array([kernel_derivated(t, ts[i], h) * xs[i] for i in indexes]).sum(axis=0)
             n2 = np.array([kernel(t, ts[i], h) for i in indexes]).sum(axis=0)
-            n3 = np.array([kernel_(t, ts[i], h) for i in indexes]).sum(axis=0)
+            n3 = np.array([kernel_derivated(t, ts[i], h) for i in indexes]).sum(axis=0)
             n4 = np.array([kernel(t, ts[i], h) * xs[i] for i in indexes]).sum(axis=0)
             n = (n1 * n2) - (n3 * n4)
             d = np.array([kernel(t, ts[i], h) for i in indexes]).sum(axis=0) ** 2
             # Cálculo del vector de velocidad.
             v = n / d
             # Añadir a la lista.
-            speeds.append(v)
+            speeds.append(FloatVector2D(*v))
         return speeds
 
     def _get_kernel(self, kernel: NadayaraWatsonEstimator) -> Tuple[Callable, Callable]:
