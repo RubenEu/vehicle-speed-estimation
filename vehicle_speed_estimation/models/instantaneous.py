@@ -52,8 +52,9 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
 
     class NadayaraWatsonEstimator(Enum):
         KERNEL_GAUSS = 0
-        KERNEL_TRIANGULAR = 1
-        KERNEL_QUADRATIC = 2
+        KERNEL_GAUSS_2 = 1
+        KERNEL_TRIANGULAR = 2
+        KERNEL_QUADRATIC = 3
 
     def __init__(self, kernel: NadayaraWatsonEstimator, bandwidth: int = 1, *args, **kwargs):
         """
@@ -114,6 +115,8 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
         kernels = {
             self.NadayaraWatsonEstimator.KERNEL_GAUSS:
                 (self.kernel_gauss, self.kernel_gauss_derivated),
+            self.NadayaraWatsonEstimator.KERNEL_GAUSS_2:
+                (self.kernel_gauss_2, self.kernel_gauss_derivated_2),
             self.NadayaraWatsonEstimator.KERNEL_TRIANGULAR:
                 (self.kernel_triangular, self.kernel_triangular_derivated),
             self.NadayaraWatsonEstimator.KERNEL_QUADRATIC:
@@ -123,12 +126,18 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
 
     @staticmethod
     def kernel_gauss(t, t_i, h):
-        # return np.exp(- (t - t_i) ** 2 / h)
-        return np.exp(- ((t - t_i) ** 2) / (2 * h ** 2))
+        return np.exp(- ((t - t_i) ** 2) / h)
 
     @staticmethod
     def kernel_gauss_derivated(t, t_i, h):
-        # return - 2 / h * (t - t_i) * np.exp(- (t - t_i) ** 2 / h)
+        return - (2 / h) * (t - t_i) * np.exp(- ((t - t_i) ** 2) / h)
+
+    @staticmethod
+    def kernel_gauss_2(t, t_i, h):
+        return np.exp(- ((t - t_i) ** 2) / (2 * h ** 2))
+
+    @staticmethod
+    def kernel_gauss_derivated_2(t, t_i, h):
         return - ((2 * t - 2 * t_i) / (2 * h ** 2)) * np.exp(- ((t - t_i) ** 2) / (2 * h ** 2))
 
     @staticmethod
