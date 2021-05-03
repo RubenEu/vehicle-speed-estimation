@@ -85,6 +85,10 @@ def apply_homography_tracked_objects(tracked_objects: TrackedObjects,
     # Iterar sobre todos los objetos seguidos.
     for tracked_object in tracked_objects:
         # Aplicar a cada una de sus detecciones en el seguimiento.
-        for object_detection in tracked_object:
-            object_detection.object = apply_homography_object(object_detection.object, h)
+        for tracked_object_detection in tracked_object:
+            # Obtener objeto con la homografía.
+            object_detection_h = apply_homography_object(tracked_object_detection.object, h)
+            # Aplicar los puntos homografiados al objeto de la tupla.
+            tracked_object_detection.object.center = object_detection_h.center
+            tracked_object_detection.object.bounding_box = object_detection_h.bounding_box
     return tracked_objects
