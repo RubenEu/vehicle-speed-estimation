@@ -124,12 +124,12 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
     @staticmethod
     def kernel_gauss(t, t_i, h):
         # return np.exp(- (t - t_i) ** 2 / h)
-        return np.exp(- (t - t_i) ** 2 / ((2 * h) ** 2))
+        return np.exp(- ((t - t_i) ** 2) / (2 * h ** 2))
 
     @staticmethod
     def kernel_gauss_derivated(t, t_i, h):
         # return - 2 / h * (t - t_i) * np.exp(- (t - t_i) ** 2 / h)
-        return - ((2 * t - 2 * t_i) / (2 * h ** 2)) * np.exp(- (t - t_i) ** 2 / ((2 * h) ** 2))
+        return - ((2 * t - 2 * t_i) / (2 * h ** 2)) * np.exp(- ((t - t_i) ** 2) / (2 * h ** 2))
 
     @staticmethod
     def kernel_triangular(t, t_i, h):
