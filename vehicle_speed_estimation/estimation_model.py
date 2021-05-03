@@ -55,7 +55,7 @@ class EstimationModel(ABC):
         """
         if self.time_unit == self.TimeUnit.SECOND:
             return frames / self.frames_per_second
-        elif self.time_unit == self.TimeUnit.HOURS:
+        elif self.time_unit == self.TimeUnit.HOUR:
             return frames / self.frames_per_second / 3600
         return frames
 
