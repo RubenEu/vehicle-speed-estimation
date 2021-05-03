@@ -2,6 +2,7 @@ import copy
 import cv2
 import numpy as np
 
+from simple_object_detection.object import Object
 from simple_object_detection.typing import Point2D, Image, BoundingBox
 from simple_object_tracking.datastructures import TrackedObjects
 
@@ -32,7 +33,25 @@ def apply_homography_frame(frame: Image, h: np.ndarray) -> Image:
     return frame_h
 
 
-def apply_homography_objects(tracked_objects: TrackedObjects, h: np.ndarray) -> TrackedObjects:
+def apply_homography_object(object_: Object, h: np.ndarray) -> Object:
+    """Aplica la homografía a un objeto.
+
+    :param object_: detección del objeto.
+    :param h: matriz de homografía.
+    :return: detección del objeto con la homografía aplicada a sus puntos.
+    """
+    # Copiar el objeto para no editar el original.
+    object_ = copy.deepcopy(object_)
+    # Homografía al centro.
+    object_.center = apply_homography_point2d(object_.center, h)
+    # Homografía a la bounding box.
+    bounding_box_h = tuple(apply_homography_point2d(p, h) for p in object_.bounding_box)
+    object_.bounding_box = BoundingBox(*bounding_box_h)
+    return object_
+
+
+def apply_homography_tracked_objects(tracked_objects: TrackedObjects,
+                                     h: np.ndarray) -> TrackedObjects:
     """Aplicar la homografía al seguimiento de los objetos.
 
     :param tracked_objects: secuencia de objetos (seguimiento).
@@ -44,10 +63,5 @@ def apply_homography_objects(tracked_objects: TrackedObjects, h: np.ndarray) -> 
     for tracked_object in tracked_objects:
         # Aplicar a cada una de sus detecciones en el seguimiento.
         for object_detection in tracked_object:
-            object_ = object_detection.object
-            # Homografía al centro.
-            object_.center = apply_homography_point2d(object_.center, h)
-            # Homografía a la bounding box.
-            bounding_box_h = tuple(apply_homography_point2d(p, h) for p in object_.bounding_box)
-            object_.bounding_box = BoundingBox(*bounding_box_h)
+            object_detection.object = apply_homography_object(object_detection.object, h)
     return tracked_objects
