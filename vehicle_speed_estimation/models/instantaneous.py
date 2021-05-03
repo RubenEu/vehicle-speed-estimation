@@ -81,7 +81,8 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
         positions = [self.get_object_point(detection) for detection in tracked_object.detections]
         # Convertirlas a las unidades indicadas.
         ts = np.array([self.convert_time_from_frames(t) for t in frames])
-        xs = np.array([self.convert_distance_vector_from_pixels(FloatVector2D(*x)) for x in positions])
+        xs = np.array([self.convert_distance_vector_from_pixels(FloatVector2D(*x))
+                       for x in positions])
         # Variables del modelo.
         kernel = self.kernel
         kernel_ = self.kernel_derivated
