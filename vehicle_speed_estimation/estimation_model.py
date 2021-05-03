@@ -3,15 +3,11 @@ from typing import Tuple, List
 from enum import Enum
 
 from simple_object_detection.object import Object
-from simple_object_detection.typing import Point2D
-from simple_object_tracking.typing import ObjectHistory
-
-from vehicle_speed_estimation.utils.conversion import (METERS_TO_KILOMETERS,
-                                                       METERS_PER_SECOND_TO_KILOMETERS_PER_HOUR)
+from simple_object_detection.typing import Point2D, FloatVector2D
 
 
 class EstimationModel(ABC):
-    """
+    """Modelo abstracto para la implementación de modelos de estimación de velocidad.
     """
 
     class ObjectPoint(Enum):
@@ -21,30 +17,72 @@ class EstimationModel(ABC):
         BOTTOM_RIGHT_CORNER = 3
         BOTTOM_LEFT_CORNER = 4
 
-    class Units(Enum):
-        PIXELS_FRAME = 0
-        METERS_SECOND = 1
-        KILOMETERS_HOURS = 2
+    class TimeUnit(Enum):
+        FRAME = 0
+        SECOND = 1
+        HOUR = 2
+
+    class LengthUnit(Enum):
+        PIXEL = 0
+        METER = 1
+        KILOMETER = 2
 
     def __init__(self,
-                 pixel_to_meters: Tuple[float, float],
-                 seconds_per_frame: float,
-                 point_selection: ObjectPoint = ObjectPoint.CENTROID,
-                 units: Units = Units.KILOMETERS_HOURS):
+                 pixel_to_meters: FloatVector2D,
+                 frames_per_second: float,
+                 object_point: ObjectPoint = ObjectPoint.CENTROID,
+                 time_unit: TimeUnit = TimeUnit.HOUR,
+                 length_unit: LengthUnit = LengthUnit.KILOMETER):
         """
 
         :param pixel_to_meters: vector de factor de conversión de un píxel a metros.
-        :param seconds_per_frame: tiempo (s) que dura cada frame.
-        :param point_selection: elegir el punto que se utilizará para realizar los cálculos de la
-        posición del vehículo.
-        :param units: unidades para la medida de la distancia, tiempo y velocidad.
+        :param frames_per_second: frames que transcurren por cada segundo.
+        :param object_point: punto que se utilizará para realizar los cálculos de la posición del
+        objeto.
+        :param time_unit: unidad para la medida del tiempo.
+        :param length_unit: unidad para la medida del espacio.
         """
         self.pixel_to_meters = pixel_to_meters
-        self.seconds_per_frame = seconds_per_frame
-        self.point_selection = point_selection
-        self.units = units
+        self.frames_per_second = frames_per_second
+        self.object_point = object_point
+        self.time_unit = time_unit
+        self.length_unit = length_unit
+
+    def convert_time_from_frames(self, frames: int) -> float:
+        """Convierte el tiempo desde frames a la unidad especificada al instanciar la clase.
+
+        :param frames: cantidad de tiempo en frames.
+        :return: cantidad de tiempo en la unidad especificada al instancia la clase.
+        """
+        if self.time_unit == self.TimeUnit.SECOND:
+            return frames / self.frames_per_second
+        elif self.time_unit == self.TimeUnit.HOURS:
+            return frames / self.frames_per_second / 3600
+        return frames
+
+    def convert_distance_vector_from_pixels(self, distance_vector: FloatVector2D) -> FloatVector2D:
+        """Convierte el vector de distancia desde píxeles a la unidad especificada al instanciar la
+        clase.
+
+        :param distance_vector: vector de distancia en píxeles.
+        :return: cantidad de espacio en la unidad especificada al instanciar la clase.
+        """
+        if self.length_unit == self.LengthUnit.METER:
+            distance_x = distance_vector.x * self.pixel_to_meters.x
+            distance_y = distance_vector.y * self.pixel_to_meters.y
+            return FloatVector2D(distance_x, distance_y)
+        elif self.length_unit == self.LengthUnit.KILOMETER:
+            distance_x = distance_vector.x * self.pixel_to_meters.x / 1000
+            distance_y = distance_vector.y * self.pixel_to_meters.y / 1000
+            return FloatVector2D(distance_x, distance_y)
+        return distance_vector
 
     def get_object_point(self, object_detection: Object) -> Point2D:
+        """Obtiene el punto del objeto especificado al instanciar la clase.
+
+        :param object_detection: detección del objeto.
+        :return: punto del objeto.
+        """
         points = {
             self.ObjectPoint.CENTROID: object_detection.center,
             self.ObjectPoint.TOP_LEFT_CORNER: object_detection.bounding_box[0],
@@ -52,18 +90,4 @@ class EstimationModel(ABC):
             self.ObjectPoint.BOTTOM_RIGHT_CORNER: object_detection.bounding_box[2],
             self.ObjectPoint.BOTTOM_LEFT_CORNER: object_detection.bounding_box[3]
         }
-        return points[self.point_selection]
-
-    def distance_vector_px_to_km(self,
-                                 distance_px_vector: Tuple[float, float]) -> Tuple[float, float]:
-        distance_km = (distance_px_vector[0] * self.pixel_to_meters[0] / METERS_TO_KILOMETERS,
-                       distance_px_vector[1] * self.pixel_to_meters[1] / METERS_TO_KILOMETERS)
-        return distance_km
-
-    def speed_vector_px_frame_to_kmh(self, speed_px_f: Tuple[float, float]) -> Tuple[float, float]:
-        # Convertir a m/s primeramente.
-        speed_vector_m_s = (speed_px_f[0] * self.pixel_to_meters[0] / self.seconds_per_frame,
-                            speed_px_f[1] * self.pixel_to_meters[1] / self.seconds_per_frame)
-        speed_vector_kmh = (speed_vector_m_s[0] * METERS_PER_SECOND_TO_KILOMETERS_PER_HOUR,
-                            speed_vector_m_s[1] * METERS_PER_SECOND_TO_KILOMETERS_PER_HOUR)
-        return speed_vector_kmh
+        return points[self.object_point]
