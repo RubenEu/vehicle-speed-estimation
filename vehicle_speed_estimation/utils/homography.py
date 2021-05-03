@@ -62,6 +62,17 @@ def apply_homography_objects(objects: List[Object], h: np.ndarray) -> List[Objec
     return [apply_homography_object(object_, h) for object_ in objects]
 
 
+def apply_homography_objects_detections(objects_detections: List[List[Object]],
+                                        h: np.ndarray) -> List[List[Object]]:
+    """Aplica la homografía a una lista de listas de detecciones de objetos.
+
+    :param objects_detections: lista la lista de detecciones de objetos de cada frame.
+    :param h: matriz de homografía.
+    :return: lista de listas de detecciones de objetos con la homografía aplicada.
+    """
+    return [apply_homography_objects(objects, h) for objects in objects_detections]
+
+
 def apply_homography_tracked_objects(tracked_objects: TrackedObjects,
                                      h: np.ndarray) -> TrackedObjects:
     """Aplicar la homografía al seguimiento de los objetos.
