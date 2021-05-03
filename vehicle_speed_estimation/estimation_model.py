@@ -51,6 +51,7 @@ class EstimationResults:
     """
     def __init__(self):
         self._estimations_results: List[EstimationResult] = []
+        self._ignored_ids: List[int] = []
 
     def __getitem__(self, item: int) -> EstimationResult:
         """Devuelve la estimación item-ésima.
@@ -76,6 +77,32 @@ class EstimationResults:
         """
         self._estimations_results.append(estimation_result)
 
+    def ignore_object(self, id_: int) -> None:
+        """Se ignorará el objeto indicado en los métodos de cálculo sobre las estimaciones, como por
+        ejemplo el cálculo del MSE.
+
+        :param id_: índice del objeto.
+        :return: None.
+        """
+        self._ignored_ids.append(id_)
+
+    def ignore_objects(self, ids: List[int]) -> None:
+        """Añade en objetos ignorados la lista de ids.
+
+        :param ids: ids de los objetos para ignorar.
+        :return: None.
+        """
+        for id_ in ids:
+            self.ignore_object(id_)
+
+    def object_ignored(self, id_: int) -> bool:
+        """Comprueba si un objeto está siendo ignorado.
+
+        :param id_: índice del objeto.
+        :return: si está siendo ignorado o no.
+        """
+        return id_ in self._ignored_ids
+
     def velocity_mse(self, expected_) -> FloatVector2D:
         raise NotImplemented()
 
@@ -88,8 +115,13 @@ class EstimationResults:
         # Comprobar que tienen las mismas dimensiones.
         if len(self._estimations_results) != len(expected_speeds):
             raise Exception('La lista de velocidades introducida no tiene la dimensión esperada.')
+        # Filtrar los índices ignorados.
+        estimated_speeds = [result.mean_speed() for result in self._estimations_results
+                            if not self.object_ignored(result.tracked_object.id)]
+        expected_speeds = [speed for id_, speed in enumerate(expected_speeds)
+                           if not self.object_ignored(id_)]
         # Calcular MSE.
-        estimated_speeds = np.array([result.mean_speed() for result in self._estimations_results])
+        estimated_speeds = np.array(estimated_speeds)
         expected_speeds = np.array(expected_speeds)
         return ((estimated_speeds - expected_speeds) ** 2).mean(axis=0)
 
