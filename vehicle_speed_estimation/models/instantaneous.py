@@ -2,9 +2,10 @@ from typing import List
 import numpy as np
 
 from simple_object_detection.typing import FloatVector2D
-from simple_object_tracking.datastructures import TrackedObject
+from simple_object_tracking.datastructures import TrackedObject, TrackedObjects
 
-from vehicle_speed_estimation.estimation_model import EstimationModel
+from vehicle_speed_estimation.estimation_model import EstimationModel, EstimationResults, \
+    EstimationResult
 
 
 class InstantaneousVelocity(EstimationModel):
@@ -32,6 +33,16 @@ class InstantaneousVelocity(EstimationModel):
         dt = np.diff(np.array(instants, dtype=np.float32))
         v = [FloatVector2D(*dx[i] / dt[i]) for i in range(len(dx))]
         return v
+
+    def fit(self, tracked_objects: TrackedObjects) -> EstimationResults:
+        estimation_results = EstimationResults()
+        # Realizar la estimación de cada objeto seguido.
+        for tracked_object in tracked_objects:
+            estimated_velocities = self.calculate_velocities(tracked_object)
+            estimation = EstimationResult(estimated_velocities, tracked_object)
+            # Añadir a la lista de estimaciones.
+            estimation_results.add(estimation)
+        return estimation_results
 
 
 class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
