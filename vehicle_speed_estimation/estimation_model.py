@@ -20,6 +20,14 @@ class EstimationResult:
         self.velocities = velocities
         self.tracked_object = tracked_object
 
+    def __str__(self) -> str:
+        return f'EstimationResult(id={self.tracked_object.id}, ' \
+               f'mean_speed={self.mean_speed()}, ' \
+               f'mean_velocity={self.mean_velocity()})'
+
+    def __repr__(self) -> str:
+        return str(self)
+
     def mean_velocity(self) -> FloatVector2D:
         """Calcula el vector de velocidad media.
 
@@ -53,6 +61,12 @@ class EstimationResults:
         if item >= len(self._estimations_results):
             raise IndexError(f'El índice {item} está fuera del límite.')
         return self._estimations_results[item]
+
+    def __str__(self) -> str:
+        return f'EstimationResults({len(self._estimations_results)})'
+
+    def __repr__(self) -> str:
+        return str(self)
 
     def add(self, estimation_result: EstimationResult) -> None:
         """Añade un resultado de una estimación.
