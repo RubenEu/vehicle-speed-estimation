@@ -77,14 +77,14 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
         :return: lista de las velocidades en cada instante.
         """
         # Desempaquetar información.
-        frames, detections = tracked_object.frames, tracked_object.detections
-        positions_pixels = [self.get_object_point(detection) for detection in detections]
+        positions_pixels = [self.get_object_point(detection)
+                            for detection in tracked_object.detections]
         # Convertir a las unidades deseadas.
         positions = [self.convert_distance_vector_from_pixels(FloatVector2D(*p))
                      for p in positions_pixels]
-        instants = [self.convert_time_from_frames(t) for t in frames]
+        instants = [self.convert_time_from_frames(t) for t in tracked_object.frames]
         # Variables observadas.
-        ts = instants
+        ts = np.array(instants)
         xs = np.array(positions)
         # Variables del modelo.
         kernel = self.kernel
@@ -92,9 +92,9 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
         h = self.bandwidth
         # Calcular los vectores de velocidad.
         speeds = list()
-        for t in frames:
+        for t in instants:
             # i-índices.
-            indexes = range(0, len(frames))
+            indexes = range(0, len(instants))
             # Calcular el numerador y denominador por partes.
             n1 = np.array([kernel_(t, ts[i], h) * xs[i] for i in indexes]).sum(axis=0)
             n2 = np.array([kernel(t, ts[i], h) for i in indexes]).sum(axis=0)
