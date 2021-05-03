@@ -1,4 +1,6 @@
 import copy
+from typing import List
+
 import cv2
 import numpy as np
 
@@ -34,7 +36,7 @@ def apply_homography_frame(frame: Image, h: np.ndarray) -> Image:
 
 
 def apply_homography_object(object_: Object, h: np.ndarray) -> Object:
-    """Aplica la homografía a un objeto.
+    """Aplica la homografía a una detección de un objeto.
 
     :param object_: detección del objeto.
     :param h: matriz de homografía.
@@ -48,6 +50,16 @@ def apply_homography_object(object_: Object, h: np.ndarray) -> Object:
     bounding_box_h = tuple(apply_homography_point2d(p, h) for p in object_.bounding_box)
     object_.bounding_box = BoundingBox(*bounding_box_h)
     return object_
+
+
+def apply_homography_objects(objects: List[Object], h: np.ndarray) -> List[Object]:
+    """Aplica la homografía a una lista de detecciones de objetos.
+
+    :param objects: lista de detecciones de objetos.
+    :param h: matriz de homografía.
+    :return: lista de detecciones de objetos con la homografía aplicada.
+    """
+    return [apply_homography_object(object_, h) for object_ in objects]
 
 
 def apply_homography_tracked_objects(tracked_objects: TrackedObjects,
