@@ -76,25 +76,21 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
         :param tracked_object: seguimiento del objeto.
         :return: lista de las velocidades en cada instante.
         """
-        # Desempaquetar información.
-        positions_pixels = [self.get_object_point(detection)
-                            for detection in tracked_object.detections]
-        # Convertir a las unidades deseadas.
-        positions = [self.convert_distance_vector_from_pixels(FloatVector2D(*p))
-                     for p in positions_pixels]
-        instants = [self.convert_time_from_frames(t) for t in tracked_object.frames]
         # Variables observadas.
-        ts = np.array(instants)
-        xs = np.array(positions)
+        frames = tracked_object.frames
+        positions = [self.get_object_point(detection) for detection in tracked_object.detections]
+        # Convertirlas a las unidades indicadas.
+        ts = np.array([self.convert_time_from_frames(t) for t in frames])
+        xs = np.array([self.convert_distance_vector_from_pixels(FloatVector2D(*x)) for x in positions])
         # Variables del modelo.
         kernel = self.kernel
         kernel_ = self.kernel_derivated
         h = self.bandwidth
         # Calcular los vectores de velocidad.
         speeds = list()
-        for t in instants:
+        for t in ts:
             # i-índices.
-            indexes = range(0, len(instants))
+            indexes = range(0, len(ts))
             # Calcular el numerador y denominador por partes.
             n1 = np.array([kernel_(t, ts[i], h) * xs[i] for i in indexes]).sum(axis=0)
             n2 = np.array([kernel(t, ts[i], h) for i in indexes]).sum(axis=0)
@@ -105,7 +101,7 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
             # Cálculo del vector de velocidad.
             v = n / d
             # Añadir a la lista.
-            speeds.append(FloatVector2D(*v))
+            speeds.append(v)
         return speeds
 
     def _get_kernel(self, kernel: NadayaraWatsonEstimator) -> Tuple[Callable, Callable]:
