@@ -32,3 +32,8 @@ class InstantaneousVelocity(EstimationModel):
         dt = np.diff(np.array(instants, dtype=np.float32))
         v = [FloatVector2D(*dx[i] / dt[i]) for i in range(len(dx))]
         return v
+
+
+class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
+    """Estimación de las velocidades usando suavizado con regresión por kenels (Nadaraya-Watson).
+    """
