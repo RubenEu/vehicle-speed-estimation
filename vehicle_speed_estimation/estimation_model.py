@@ -33,7 +33,7 @@ class EstimationResult:
 
         :return: vector de velocidad media.
         """
-        return np.array(self.velocities).mean(axis=0)
+        return FloatVector2D(*np.array(self.velocities).mean(axis=0))
 
     def mean_speed(self) -> float:
         """Calcula el módulo de la velocidad media.
