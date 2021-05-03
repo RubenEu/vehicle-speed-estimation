@@ -1,5 +1,4 @@
-from abc import ABC, abstractmethod
-from typing import Tuple, List
+from abc import ABC
 from enum import Enum
 
 from simple_object_detection.object import Object

@@ -1,5 +1,4 @@
-from typing import List, Tuple, Callable, Any
-from enum import Enum
+from typing import List
 import numpy as np
 
 from simple_object_detection.typing import FloatVector2D

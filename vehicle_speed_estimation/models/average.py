@@ -1,9 +1,7 @@
-from typing import Tuple
 import numpy as np
 
 from simple_object_detection.typing import FloatVector2D
 from simple_object_tracking.datastructures import TrackedObject
-from simple_object_tracking.utils import euclidean_norm
 
 from vehicle_speed_estimation.estimation_model import EstimationModel
 
