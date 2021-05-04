@@ -65,17 +65,26 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
         KERNEL_TRIANGULAR = 2
         KERNEL_QUADRATIC = 3
 
-    def __init__(self, kernel: NadayaraWatsonEstimator, bandwidth: int = 1, *args, **kwargs):
+    def __init__(self,
+                 kernel: NadayaraWatsonEstimator,
+                 bandwidth: int = 1,
+                 purge_initial_estimations: int = 0,
+                 purge_final_estimations: int = 0,
+                 *args, **kwargs):
         """
 
         :param kernel: kernel utilizado para el suavizado.
         :param bandwidth: ancho usado en el kernel.
+        :param purge_initial_estimations: cantidad de estimaciones iniciales que se eliminarán.
+        :param purge_initial_estimations: cantidad de estimaciones finales que se eliminarán.
         :param args:
         :param kwargs:
         """
         super().__init__(*args, **kwargs)
-        self.bandwidth = bandwidth
         self.kernel, self.kernel_derivated = self._get_kernel(kernel)
+        self.bandwidth = bandwidth
+        self.purge_initial_estimations = purge_initial_estimations
+        self.purge_final_estimations = purge_final_estimations
 
     def calculate_velocities(self, tracked_object: TrackedObject) -> List[FloatVector2D]:
         """Realiza el cálculo de las velocidades en cada instante que fue detectado el objeto.
@@ -97,7 +106,7 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
         kernel_derivated = self.kernel_derivated
         h = self.bandwidth
         # Calcular los vectores de velocidad.
-        speeds = list()
+        velocities = list()
         for t in ts:
             # i-índices.
             indexes = range(0, len(ts))
@@ -113,8 +122,19 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
             # Convertir las unidades a las indicadas al instanciar la c.ase
             v = self.convert_velocity_from_pixels_frames(FloatVector2D(*v))
             # Añadir a la lista.
-            speeds.append(v)
-        return speeds
+            velocities.append(v)
+        return self._purge_extremes_estimations(velocities)
+
+    def _purge_extremes_estimations(self, velocities: List[FloatVector2D]) -> List[FloatVector2D]:
+        """Elimina las estimaciones iniciales y finales para evitar que el error que produce el
+        suavizado en los extremos repercuta en el cálculo de la velocidad media.
+
+        :param velocities: vector de velocidades.
+        :return: vector de velocidades purgado.
+        """
+        start = self.purge_initial_estimations
+        end = len(velocities) - self.purge_final_estimations
+        return velocities[start:end]
 
     def _get_kernel(self, kernel: NadayaraWatsonEstimator) -> Tuple[Callable, Callable]:
         """Devuelve las funciones del kernel y su derivada respectivamente.
