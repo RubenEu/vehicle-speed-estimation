@@ -197,6 +197,31 @@ class EstimationModel(ABC):
             return FloatVector2D(distance_x, distance_y)
         return distance_vector
 
+    def convert_velocity_from_pixels_frames(self, velocity: FloatVector2D) -> FloatVector2D:
+        """Convierte el vector de velocidad en píxeles / frames a la unidad especificada al
+        instanciar la clase.
+
+        :param velocity: vector de velocidad en píxeles/frames.
+        :return: vector de velocidad en la unidad especificada al instanciar la clase.
+        """
+        # Convertir unidad de espacio.
+        velocity_x, velocity_y = velocity
+        if self.length_unit == self.LengthUnit.METER:
+            velocity_x = velocity_x * self.pixel_to_meters.x
+            velocity_y = velocity_y * self.pixel_to_meters.y
+        elif self.length_unit == self.LengthUnit.KILOMETER:
+            velocity_x = velocity_x * self.pixel_to_meters.x / 1000
+            velocity_y = velocity_y * self.pixel_to_meters.y / 1000
+        # Convertir la unidad de tiempo.
+        if self.time_unit == self.TimeUnit.SECOND:
+            velocity_x = velocity_x * self.frames_per_second
+            velocity_y = velocity_y * self.frames_per_second
+        elif self.time_unit == self.TimeUnit.HOUR:
+            velocity_x = velocity_x * self.frames_per_second * 3600
+            velocity_y = velocity_y * self.frames_per_second * 3600
+        # Devolver vector de velocidad.
+        return FloatVector2D(velocity_x, velocity_y)
+
     def get_object_point(self, object_detection: Object) -> Point2D:
         """Obtiene el punto del objeto especificado al instanciar la clase.
 

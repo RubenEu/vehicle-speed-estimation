@@ -48,6 +48,15 @@ class InstantaneousVelocity(EstimationModel):
 
 class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
     """Estimación de las velocidades usando suavizado con regresión por kenels (Nadaraya-Watson).
+
+    Problema: si se realizan los cálculos con el tiempo en horas, las unidades serán del orden de
+    10e-3 e incluso 10e-5, por tanto, el bandwidth necesitará ser proporcional a él. Un kernel mayor
+    que de 10e-5 hará que el suavizado sea excesivo. Por tanto, el cálculo de las velocidades se
+    realiza con píxeles y frames como unidades, y la conversión se realiza sobre la estimación de
+    velocidad y no sobre las unidades de entrada.
+
+    Si se utiliza un kernel pequeño cuando la diferencia entre los instantes de tiempo es grande,
+    habrá cálculos que puedan resultar en underflow.
     """
 
     class NadayaraWatsonEstimator(Enum):
@@ -80,10 +89,9 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
         # Variables observadas.
         frames = tracked_object.frames
         positions = [self.get_object_point(detection) for detection in tracked_object.detections]
-        # Convertirlas a las unidades indicadas.
-        ts = np.array([self.convert_time_from_frames(t) for t in frames])
-        xs = np.array([self.convert_distance_vector_from_pixels(FloatVector2D(*x))
-                       for x in positions])
+        # Variables para el cálculo con el estimador de Nadaraya-Watson.
+        ts = frames
+        xs = np.array(positions)
         # Variables del modelo.
         kernel = self.kernel
         kernel_derivated = self.kernel_derivated
@@ -102,8 +110,10 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
             d = np.array([kernel(t, ts[i], h) for i in indexes]).sum(axis=0) ** 2
             # Cálculo del vector de velocidad.
             v = n / d
+            # Convertir las unidades a las indicadas al instanciar la c.ase
+            v = self.convert_velocity_from_pixels_frames(FloatVector2D(*v))
             # Añadir a la lista.
-            speeds.append(FloatVector2D(*v))
+            speeds.append(v)
         return speeds
 
     def _get_kernel(self, kernel: NadayaraWatsonEstimator) -> Tuple[Callable, Callable]:
