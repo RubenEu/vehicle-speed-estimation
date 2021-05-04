@@ -63,6 +63,11 @@ class EstimationResults:
             raise IndexError(f'El índice {item} está fuera del límite.')
         return self._estimations_results[item]
 
+    def __len__(self) -> int:
+        """Cantidad de estimaciones resultantes.
+        """
+        return len(self._estimations_results)
+
     def __str__(self) -> str:
         return f'EstimationResults({len(self._estimations_results)})'
 
