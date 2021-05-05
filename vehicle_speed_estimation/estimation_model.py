@@ -43,6 +43,23 @@ class EstimationResult:
         mean_velocity = np.array(self.velocities).mean(axis=0)
         return np.linalg.norm(mean_velocity)
 
+    @property
+    def angles(self) -> List[float]:
+        """Lista de los ángulos de los vectores de velocidad.
+
+        :return: lista de ángulos en radianes.
+        """
+        angles = [np.arctan2(zip(*self.velocities))]
+        return angles
+
+    def mean_angle(self) -> float:
+        """Media de los ángulos calculados en base a los vectores de velocidad estimados.
+
+        :return: media de los ángulos calculados.
+        """
+        angles = np.array(self.angles)
+        return angles.mean()
+
 
 class EstimationResults:
     """Resultados de un modelo de estimación.
