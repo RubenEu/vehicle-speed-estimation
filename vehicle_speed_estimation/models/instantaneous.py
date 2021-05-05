@@ -68,8 +68,6 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
     def __init__(self,
                  kernel: NadayaraWatsonEstimator,
                  bandwidth: int = 1,
-                 purge_initial_estimations: int = 0,
-                 purge_final_estimations: int = 0,
                  *args, **kwargs):
         """
 
@@ -83,8 +81,6 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
         super().__init__(*args, **kwargs)
         self.kernel, self.kernel_derivated = self._get_kernel(kernel)
         self.bandwidth = bandwidth
-        self.purge_initial_estimations = purge_initial_estimations
-        self.purge_final_estimations = purge_final_estimations
 
     def calculate_velocities(self, tracked_object: TrackedObject) -> List[FloatVector2D]:
         """Realiza el cálculo de las velocidades en cada instante que fue detectado el objeto.
@@ -95,46 +91,16 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
         :param tracked_object: seguimiento del objeto.
         :return: lista de las velocidades en cada instante.
         """
-        # Variables observadas.
-        frames = tracked_object.frames
-        positions = [self.get_object_point(detection) for detection in tracked_object.detections]
-        # Variables para el cálculo con el estimador de Nadaraya-Watson.
-        ts = frames
-        xs = np.array(positions)
-        # Variables del modelo.
-        kernel = self.kernel
-        kernel_derivated = self.kernel_derivated
+        # Variables de observación.
+        ts = tracked_object.frames[1:]
+        ts_init = ts[0]
+        vs = super().calculate_velocities(tracked_object)
         h = self.bandwidth
-        # Calcular los vectores de velocidad.
-        velocities = list()
-        for t in ts:
-            # i-índices.
-            indexes = range(0, len(ts))
-            # Calcular el numerador y denominador por partes.
-            n1 = np.array([kernel_derivated(t, ts[i], h) * xs[i] for i in indexes]).sum(axis=0)
-            n2 = np.array([kernel(t, ts[i], h) for i in indexes]).sum(axis=0)
-            n3 = np.array([kernel_derivated(t, ts[i], h) for i in indexes]).sum(axis=0)
-            n4 = np.array([kernel(t, ts[i], h) * xs[i] for i in indexes]).sum(axis=0)
-            n = (n1 * n2) - (n3 * n4)
-            d = np.array([kernel(t, ts[i], h) for i in indexes]).sum(axis=0) ** 2
-            # Cálculo del vector de velocidad.
-            v = n / d
-            # Convertir las unidades a las indicadas al instanciar la c.ase
-            v = self.convert_velocity_from_pixels_frames(FloatVector2D(*v))
-            # Añadir a la lista.
-            velocities.append(v)
-        return self._purge_extremes_estimations(velocities)
-
-    def _purge_extremes_estimations(self, velocities: List[FloatVector2D]) -> List[FloatVector2D]:
-        """Elimina las estimaciones iniciales y finales para evitar que el error que produce el
-        suavizado en los extremos repercuta en el cálculo de la velocidad media.
-
-        :param velocities: vector de velocidades.
-        :return: vector de velocidades purgado.
-        """
-        start = self.purge_initial_estimations
-        end = len(velocities) - self.purge_final_estimations
-        return velocities[start:end]
+        # Aplicar Nadaraya-Watson para suavizarlas.
+        velocities_smoothed = [self.nadayara_watson_estimator(ts[i], vs, ts, h, self.kernel)
+                               for i in range(len(ts))]
+        # Devolver velocidad suavizada en las unidades de la instancia de la clase.
+        return velocities_smoothed
 
     def _get_kernel(self, kernel: NadayaraWatsonEstimator) -> Tuple[Callable, Callable]:
         """Devuelve las funciones del kernel y su derivada respectivamente.
@@ -150,7 +116,7 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
             self.NadayaraWatsonEstimator.KERNEL_TRIANGULAR:
                 (self.kernel_triangular, self.kernel_triangular_derivated),
             self.NadayaraWatsonEstimator.KERNEL_QUADRATIC:
-                None
+                NotImplemented,
         }
         return kernels[kernel]
 
@@ -181,7 +147,11 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
         return - 1 / h * np.sign(t - t_i)
 
     @staticmethod
-    def nadayara_watson_estimator(t, xs, ts, h, kernel):
+    def nadayara_watson_estimator(t: float,
+                                  xs: List[FloatVector2D],
+                                  ts: List[float],
+                                  h: float,
+                                  kernel: Callable[..., float]) -> FloatVector2D:
         """Estimador de la posición aplicando Nadaraya-Watson.
 
         :param t: instante en el que se evalúa.
@@ -191,9 +161,10 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
         :param kernel: kernel utilizado.
         :return: lista de posiciones suavizadas.
         """
-        xs = np.array([np.array(x) for x in xs])
-        ts = np.array(ts)
+        xs = np.array(xs, dtype=np.float64)
+        ts = np.array(ts, dtype=np.float64)
         indexes = list(range(len(ts)))
         _num = np.array([kernel(t, ts[i], h) * xs[i] for i in indexes]).sum(axis=0)
         _den = np.array([kernel(t, ts[i], h) for i in indexes]).sum(axis=0)
-        return _num / _den
+        result = _num / _den
+        return FloatVector2D(*result)
