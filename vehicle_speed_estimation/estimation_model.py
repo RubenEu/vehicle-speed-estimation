@@ -49,8 +49,9 @@ class EstimationResult:
         :param ids: lista de ids para eliminar.
         :return: None.
         """
-        for id_ in ids:
-            self.velocities.pop(id_)
+        # BUG: Al ir borrando los ids, puede producirse IndexError.
+        # for id_ in ids:
+        #     self.velocities.pop(id_)
 
 
 class EstimationResults:
