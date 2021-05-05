@@ -43,11 +43,20 @@ class EstimationResult:
         mean_velocity = np.array(self.velocities).mean(axis=0)
         return np.linalg.norm(mean_velocity)
 
+    def remove_estimate_velocities(self, ids: List[int]) -> None:
+        """Elimina las velocidades estimadas indicadas.
+
+        :param ids: lista de ids para eliminar.
+        :return: None.
+        """
+        for id_ in ids:
+            self.velocities.pop(id_)
+
 
 class EstimationResults:
     """Resultados de un modelo de estimación.
 
-    TODO: Tener en cuenta vehículos válidos.
+    TODO: Eliminar estimaciones dado su id o cómorl
     """
     def __init__(self):
         self._estimations_results: List[EstimationResult] = []
