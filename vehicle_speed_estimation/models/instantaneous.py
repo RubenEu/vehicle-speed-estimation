@@ -48,15 +48,6 @@ class InstantaneousVelocity(EstimationModel):
 
 class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
     """Estimación de las velocidades usando suavizado con regresión por kenels (Nadaraya-Watson).
-
-    Problema: si se realizan los cálculos con el tiempo en horas, las unidades serán del orden de
-    10e-3 e incluso 10e-5, por tanto, el bandwidth necesitará ser proporcional a él. Un kernel mayor
-    que de 10e-5 hará que el suavizado sea excesivo. Por tanto, el cálculo de las velocidades se
-    realiza con píxeles y frames como unidades, y la conversión se realiza sobre la estimación de
-    velocidad y no sobre las unidades de entrada.
-
-    Si se utiliza un kernel pequeño cuando la diferencia entre los instantes de tiempo es grande,
-    habrá cálculos que puedan resultar en underflow.
     """
 
     class NadayaraWatsonEstimator(Enum):
@@ -83,10 +74,7 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
         self.bandwidth = bandwidth
 
     def calculate_velocities(self, tracked_object: TrackedObject) -> List[FloatVector2D]:
-        """Realiza el cálculo de las velocidades en cada instante que fue detectado el objeto.
-
-        La unidad de medida de las velocidades vendrá determinada por la introducida al instanciar
-        el modelo con el parámetro `units`.
+        """Realiza el cálculo de las velocidades y aplica un suavizado con regresión por kernels.
 
         :param tracked_object: seguimiento del objeto.
         :return: lista de las velocidades en cada instante.
