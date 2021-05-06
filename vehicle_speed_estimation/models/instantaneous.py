@@ -30,8 +30,8 @@ class InstantaneousVelocity(EstimationModel):
                      for p in positions_pixels]
         instants = [self.convert_time_from_frames(t) for t in frames]
         # Cálculo de las velocidades.
-        dx = np.diff(np.array(positions, dtype=np.float32), axis=0)
-        dt = np.diff(np.array(instants, dtype=np.float32))
+        dx = np.diff(np.array(positions), axis=0)
+        dt = np.diff(np.array(instants))
         v = [FloatVector2D(*dx[i] / dt[i]) for i in range(len(dx))]
         return v
 
