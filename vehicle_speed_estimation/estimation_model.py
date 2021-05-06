@@ -267,10 +267,12 @@ class EstimationModel(ABC):
         estimation_results = EstimationResults()
         # Realizar la estimación de cada objeto seguido.
         for tracked_object in tracked_objects:
-            estimated_velocities = self.calculate_velocities(tracked_object)
-            estimation = EstimationResult(estimated_velocities, tracked_object)
-            # Añadir a la lista de estimaciones.
-            estimation_results.add(estimation)
+            # Comprobación previa. Para estimar una velocidad se necesitan al menos 2 observaciones.
+            if len(tracked_object) > 2:
+                estimated_velocities = self.calculate_velocities(tracked_object)
+                estimation = EstimationResult(estimated_velocities, tracked_object)
+                # Añadir a la lista de estimaciones.
+                estimation_results.add(estimation)
         return estimation_results
 
     @abstractmethod
