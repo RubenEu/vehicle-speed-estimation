@@ -52,9 +52,8 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
 
     class NadayaraWatsonEstimator(Enum):
         KERNEL_GAUSS = 0
-        KERNEL_GAUSS_2 = 1
-        KERNEL_TRIANGULAR = 2
-        KERNEL_QUADRATIC = 3
+        KERNEL_TRIANGULAR = 1
+        KERNEL_QUADRATIC = 2
 
     def __init__(self,
                  kernel: NadayaraWatsonEstimator,
@@ -99,8 +98,6 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
         kernels = {
             self.NadayaraWatsonEstimator.KERNEL_GAUSS:
                 (self.kernel_gauss, self.kernel_gauss_derivated),
-            self.NadayaraWatsonEstimator.KERNEL_GAUSS_2:
-                (self.kernel_gauss_2, self.kernel_gauss_derivated_2),
             self.NadayaraWatsonEstimator.KERNEL_TRIANGULAR:
                 (self.kernel_triangular, self.kernel_triangular_derivated),
             self.NadayaraWatsonEstimator.KERNEL_QUADRATIC:
@@ -109,28 +106,28 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
         return kernels[kernel]
 
     @staticmethod
-    def kernel_gauss(t, t_i, h):
+    def kernel_gauss(t: float, t_i: float, h: float):
+        """Kernel gaussiano.
+        """
         return np.exp(- ((t - t_i) ** 2) / h)
 
     @staticmethod
-    def kernel_gauss_derivated(t, t_i, h):
+    def kernel_gauss_derivated(t: float, t_i: float, h: float):
+        """Derivada del kernel gaussiano.
+        """
         return - (2 / h) * (t - t_i) * np.exp(- ((t - t_i) ** 2) / h)
 
     @staticmethod
-    def kernel_gauss_2(t, t_i, h):
-        return np.exp(- ((t - t_i) ** 2) / (2 * h ** 2))
-
-    @staticmethod
-    def kernel_gauss_derivated_2(t, t_i, h):
-        return - ((2 * t - 2 * t_i) / (2 * h ** 2)) * np.exp(- ((t - t_i) ** 2) / (2 * h ** 2))
-
-    @staticmethod
-    def kernel_triangular(t, t_i, h):
+    def kernel_triangular(t: float, t_i: float, h: float):
+        """Kernel triangular.
+        """
         assert abs(t - t_i) < h, f'|t-t_i| < h. {abs(t - t_i)} > {h}'
         return 1 - (abs(t - t_i) / h)
 
     @staticmethod
-    def kernel_triangular_derivated(t, t_i, h):
+    def kernel_triangular_derivated(t: float, t_i: float, h: float):
+        """Derivada del kernel triangular.
+        """
         assert abs(t - t_i) < h, f'|t-t_i| < h. {abs(t - t_i)} > {h}'
         return - 1 / h * np.sign(t - t_i)
 
@@ -139,7 +136,7 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
                                   xs: List[FloatVector2D],
                                   ts: List[float],
                                   h: float,
-                                  kernel: Callable[..., float]) -> FloatVector2D:
+                                  kernel: Callable[[float, float, float], float]) -> FloatVector2D:
         """Estimador de la posición aplicando Nadaraya-Watson.
 
         :param t: instante en el que se evalúa.
