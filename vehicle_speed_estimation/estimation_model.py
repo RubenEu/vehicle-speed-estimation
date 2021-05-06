@@ -6,6 +6,7 @@ import numpy as np
 from simple_object_detection.object import Object
 from simple_object_detection.typing import Point2D, FloatVector2D
 from simple_object_tracking.datastructures import TrackedObjects, TrackedObject
+from vehicle_speed_estimation.exceptions import VehicleSpeedEstimationException
 
 
 class EstimationResult:
@@ -135,7 +136,10 @@ class EstimationResults:
         """
         # Comprobar que tienen las mismas dimensiones.
         if len(self._estimations_results) != len(expected_speeds):
-            raise Exception('La lista de velocidades introducida no tiene la dimensión esperada.')
+            raise VehicleSpeedEstimationException(
+                f'La lista de velocidades introducida no tiene la dimensión esperada. '
+                f'Se esperaban {len(self._estimations_results)} y se obtuvieron '
+                f'{len(expected_speeds)}')
         # Filtrar los índices ignorados.
         estimated_speeds = [result.mean_speed() for result in self._estimations_results
                             if not self.object_ignored(result.tracked_object.id)]
