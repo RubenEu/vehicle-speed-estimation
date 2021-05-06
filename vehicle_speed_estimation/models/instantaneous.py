@@ -33,6 +33,9 @@ class InstantaneousVelocity(EstimationModel):
         dx = np.diff(np.array(positions), axis=0)
         dt = np.diff(np.array(instants))
         v = [FloatVector2D(*dx[i] / dt[i]) for i in range(len(dx))]
+        # Puesto que las velocidades son vectores, y la imagen tiene el eje Y al revés, para
+        # estandarizarlo, cambiar el sentido del vector
+        v = v * np.array([1., -1.])
         return v
 
     def fit(self, tracked_objects: TrackedObjects) -> EstimationResults:
