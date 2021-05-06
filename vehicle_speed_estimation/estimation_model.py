@@ -47,9 +47,10 @@ class EstimationResult:
     def angles(self) -> List[float]:
         """Lista de los ángulos de los vectores de velocidad.
 
-        :return: lista de ángulos en radianes.
+        :return: lista de ángulos en grados.
         """
-        angles = [np.arctan2(*zip(*self.velocities))]
+        velocities_x, velocities_y = zip(*self.velocities)
+        angles = list(np.arctan2(velocities_y, velocities_x) * 180 / np.pi)
         return angles
 
     def mean_angle(self) -> float:
