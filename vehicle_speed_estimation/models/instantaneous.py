@@ -3,10 +3,9 @@ from typing import List, Tuple, Callable
 import numpy as np
 
 from simple_object_detection.typing import FloatVector2D
-from simple_object_tracking.datastructures import TrackedObject, TrackedObjects
+from simple_object_tracking.datastructures import TrackedObject
 
-from vehicle_speed_estimation.estimation_model import EstimationModel, EstimationResults, \
-    EstimationResult
+from vehicle_speed_estimation.estimation_model import EstimationModel
 
 
 class InstantaneousVelocity(EstimationModel):
