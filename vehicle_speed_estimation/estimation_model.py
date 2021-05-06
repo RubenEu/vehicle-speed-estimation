@@ -49,7 +49,7 @@ class EstimationResult:
 
         :return: lista de ángulos en radianes.
         """
-        angles = [np.arctan2(zip(*self.velocities))]
+        angles = [np.arctan2(*zip(*self.velocities))]
         return angles
 
     def mean_angle(self) -> float:
