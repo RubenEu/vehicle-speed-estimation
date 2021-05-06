@@ -1,3 +1,5 @@
+from typing import List
+
 import numpy as np
 
 from simple_object_detection.typing import FloatVector2D
@@ -72,14 +74,7 @@ class TwoPositionsSpeedAverage(EstimationModel):
         speed = distance.x / time, distance.y / time
         return FloatVector2D(*speed)
 
-    def fit(self, tracked_objects: TrackedObjects) -> EstimationResults:
-        estimation_results = EstimationResults()
-        # Realizar la estimación de cada objeto seguido.
-        for tracked_object in tracked_objects:
-            estimated_speed = self.calculate_speed(tracked_object)
-            estimation = EstimationResult([estimated_speed], tracked_object)
-            # Añadir a la lista de estimaciones.
-            estimation_results.add(estimation)
-        return estimation_results
+    def calculate_velocities(self, tracked_object: TrackedObject) -> List[FloatVector2D]:
+        return [self.calculate_speed(tracked_object)]
 
 

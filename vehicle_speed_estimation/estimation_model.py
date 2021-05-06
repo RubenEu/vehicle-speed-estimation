@@ -258,10 +258,30 @@ class EstimationModel(ABC):
         }
         return points[self.object_point]
 
-    @abstractmethod
     def fit(self, tracked_objects: TrackedObjects) -> EstimationResults:
         """Realizar la estimación del modelo.
 
         :param tracked_objects: estructura con los seguimientos de los objetos.
         :return: estimaciones calculadas.
+        """
+        estimation_results = EstimationResults()
+        # Realizar la estimación de cada objeto seguido.
+        for tracked_object in tracked_objects:
+            estimated_velocities = self.calculate_velocities(tracked_object)
+            estimation = EstimationResult(estimated_velocities, tracked_object)
+            # Añadir a la lista de estimaciones.
+            estimation_results.add(estimation)
+        return estimation_results
+
+    @abstractmethod
+    def calculate_velocities(self, tracked_object: TrackedObject) -> List[FloatVector2D]:
+        """Método que debe ser implementado.
+
+        Debe realizar el cálculo de las velocidades en cada instante que fue detectado el objeto.
+
+        La unidad de medida de las velocidades vendrá determinada por la introducida al instanciar
+        el modelo con el parámetro `units`.
+
+        :param tracked_object: seguimiento del objeto.
+        :return: lista de las velocidades en cada instante.
         """

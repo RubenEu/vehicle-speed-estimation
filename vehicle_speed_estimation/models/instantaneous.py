@@ -38,16 +38,6 @@ class InstantaneousVelocity(EstimationModel):
         v = v * np.array([1., -1.])
         return v
 
-    def fit(self, tracked_objects: TrackedObjects) -> EstimationResults:
-        estimation_results = EstimationResults()
-        # Realizar la estimación de cada objeto seguido.
-        for tracked_object in tracked_objects:
-            estimated_velocities = self.calculate_velocities(tracked_object)
-            estimation = EstimationResult(estimated_velocities, tracked_object)
-            # Añadir a la lista de estimaciones.
-            estimation_results.add(estimation)
-        return estimation_results
-
 
 class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
     """Estimación de las velocidades usando suavizado con regresión por kenels (Nadaraya-Watson).
