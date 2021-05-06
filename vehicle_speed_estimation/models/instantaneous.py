@@ -81,7 +81,7 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
         """
         # Variables de observación.
         ts = tracked_object.frames[1:]
-        ts_init = ts[0]
+        # Obtener las velocidades.
         vs = super().calculate_velocities(tracked_object)
         h = self.bandwidth
         # Aplicar Nadaraya-Watson para suavizarlas.
