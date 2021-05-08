@@ -100,7 +100,7 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
             velocities.append(v)
         # Eliminar las estimaciones de los extremos producidos por la derivada de N-W.
         num_estimations_to_remove = int(2 * np.sqrt(h))
-        velocities = velocities[num_estimations_to_remove:num_estimations_to_remove+1]
+        velocities = velocities[num_estimations_to_remove:-num_estimations_to_remove+1]
         return velocities
 
     def _get_kernel(self, kernel: NadayaraWatsonEstimator) -> Tuple[Callable, Callable]:
