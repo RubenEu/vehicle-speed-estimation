@@ -34,6 +34,8 @@ class EstimationResult:
 
         :return: vector de velocidad media.
         """
+        if len(self.velocities) == 0:
+            return FloatVector2D(0., 0.)
         return FloatVector2D(*np.array(self.velocities).mean(axis=0))
 
     def mean_speed(self) -> float:
@@ -41,6 +43,8 @@ class EstimationResult:
 
         :return: módulo de la velocidad media.
         """
+        if len(self.velocities) == 0:
+            return 0.
         mean_velocity = np.array(self.velocities).mean(axis=0)
         return np.linalg.norm(mean_velocity)
 
@@ -59,6 +63,8 @@ class EstimationResult:
 
         :return: media de los ángulos calculados.
         """
+        if len(self.angles) == 0:
+            return 0.
         angles = np.array(self.angles)
         return angles.mean()
 
