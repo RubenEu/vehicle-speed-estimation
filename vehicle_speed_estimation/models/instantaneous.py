@@ -93,14 +93,14 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
             n3 = np.array([kds[i] for i in indexes]).sum()
             n4 = np.array([ks[i] * xs[i] for i in indexes]).sum(axis=0)
             # Cálculo del vector de velocidad.
-            v = (n1 * n2 - n3 * n4) / n2 ** 2
-            # Eliminar de los extremos las estimaciones.
-            num_estimations_to_remove = int(2 * np.sqrt(h))
-            v = v[num_estimations_to_remove:num_estimations_to_remove+1]
+            v = (n1 * n2 - n3 * n4) / (n2 ** 2)
             # Convertir las unidades a las indicadas al instanciar la c.ase
             v = self.convert_velocity_from_pixels_frames(FloatVector2D(*v))
             # Añadir a la lista.
             velocities.append(v)
+        # Eliminar las estimaciones de los extremos producidos por la derivada de N-W.
+        num_estimations_to_remove = int(2 * np.sqrt(h))
+        velocities = velocities[num_estimations_to_remove:num_estimations_to_remove+1]
         return velocities
 
     def _get_kernel(self, kernel: NadayaraWatsonEstimator) -> Tuple[Callable, Callable]:
