@@ -70,16 +70,38 @@ class InstantaneousVelocityWithKernelRegression(InstantaneousVelocity):
         :param tracked_object: seguimiento del objeto.
         :return: lista de las velocidades en cada instante.
         """
-        # Variables de observación.
-        ts = tracked_object.frames[1:]
-        # Obtener las velocidades.
-        vs = super().calculate_velocities(tracked_object)
+        # Variables observadas.
+        frames = tracked_object.frames
+        positions = [self.get_object_point(detection) for detection in tracked_object.detections]
+        # Variables para el cálculo con el estimador de Nadaraya-Watson.
+        ts = np.array(frames)
+        xs = np.array(positions)
+        # Variables del modelo.
+        kernel = self.kernel
+        kernel_derivated = self.kernel_derivated
         h = self.bandwidth
-        # Aplicar Nadaraya-Watson para suavizarlas.
-        velocities_smoothed = [self.nadayara_watson_estimator(ts[i], vs, ts, h, self.kernel)
-                               for i in range(len(ts))]
-        # Devolver velocidad suavizada en las unidades de la instancia de la clase.
-        return velocities_smoothed
+        # Calcular los vectores de velocidad.
+        velocities = list()
+        for t in ts:
+            # i-índices.
+            indexes = range(0, len(ts))
+            # Calcular el numerador y denominador por partes.
+            ks = [kernel(t, ts[i], h) for i in indexes]
+            kds = [kernel_derivated(t, ts[i], h) for i in indexes]
+            n1 = np.array([kds[i] * xs[i] for i in indexes]).sum(axis=0)
+            n2 = np.array([ks[i] for i in indexes]).sum()
+            n3 = np.array([kds[i] for i in indexes]).sum()
+            n4 = np.array([ks[i] * xs[i] for i in indexes]).sum(axis=0)
+            # Cálculo del vector de velocidad.
+            v = (n1 * n2 - n3 * n4) / n2 ** 2
+            # Eliminar de los extremos las estimaciones.
+            num_estimations_to_remove = int(2 * np.sqrt(h))
+            v = v[num_estimations_to_remove:num_estimations_to_remove+1]
+            # Convertir las unidades a las indicadas al instanciar la c.ase
+            v = self.convert_velocity_from_pixels_frames(FloatVector2D(*v))
+            # Añadir a la lista.
+            velocities.append(v)
+        return velocities
 
     def _get_kernel(self, kernel: NadayaraWatsonEstimator) -> Tuple[Callable, Callable]:
         """Devuelve las funciones del kernel y su derivada respectivamente.
