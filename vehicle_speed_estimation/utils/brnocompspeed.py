@@ -11,9 +11,9 @@ def map_dataset_to_observations(dataset: dict,
                                 tracked_objects: TrackedObjects,
                                 tracked_objects_h: TrackedObjects,
                                 line: Tuple[Point2D, Point2D],
-                                max_time_diff: float = 0.4) -> Tuple[List[Dict],
-                                                                     TrackedObjects,
-                                                                     TrackedObjects]:
+                                max_time_diff: float = 0.4,
+                                verbose: bool = False) -> Tuple[List[Dict], TrackedObjects,
+                                                                TrackedObjects]:
     """Función para establecer una correspondencia entre los vehículos detectados en el seguimiento
     y los vehículos anotados en el dataset.
 
@@ -24,6 +24,7 @@ def map_dataset_to_observations(dataset: dict,
     y seguidos).
     :param max_time_diff: tiempo máximo de diferencia que puede haber entre un vehículo anotado y un
     vehículo detectado al pasar la línea indicada.
+    :param verbose: indica si se quiere mostrar la barra de progreso o no.
     :return: lista de los vehículos anotados y estructura de los objetos seguidos indexadas en el
     mismo orden de correspondencia.
     """
@@ -39,7 +40,8 @@ def map_dataset_to_observations(dataset: dict,
     tracked_objects_h_matched: List[TrackedObject] = []
     cars_matched: List[Dict] = []
     id_ = 0
-    t = tqdm(total=len(tracked_objects_h_list), desc='Mapping dataset to tracked objects.')
+    t = tqdm(total=len(tracked_objects_h_list), desc='Mapping dataset to tracked objects.',
+             disable=not verbose)
     for tracked_object_h in tracked_objects_h_list:
         time_passed_line = tracked_object_h.find_closest_detection_to_line(line).frame / fps
         # Vehículos del dataset candidatos.
