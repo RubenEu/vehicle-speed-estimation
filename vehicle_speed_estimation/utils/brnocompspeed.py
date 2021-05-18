@@ -9,6 +9,7 @@ from simple_object_tracking.datastructures import TrackedObjects, TrackedObject
 
 def map_dataset_to_observations(dataset: dict,
                                 tracked_objects: TrackedObjects,
+                                tracked_objects_h: TrackedObjects,
                                 line: Tuple[Point2D, Point2D],
                                 max_time_diff: float = 0.4) -> Tuple[List[Dict], TrackedObjects]:
     """Función para establecer una correspondencia entre los vehículos detectados en el seguimiento
@@ -20,7 +21,8 @@ def map_dataset_to_observations(dataset: dict,
         ya que la ordenación se realiza sobre la homografiada.
 
     :param dataset: información de la sesión del dataset BrnoCompSpeed.
-    :param tracked_objects: estructura de datos de los objetos seguidos.
+    :param tracked_objects_h: estructura de datos de los objetos seguidos.
+    :param tracked_objects_h: estructura de datos de los objetos seguidos con la homografía aplicada.
     :param line: línea que se usará para comparar el instante en que pasaron los vehículos (anotados
     y seguidos).
     :param max_time_diff: tiempo máximo de diferencia que puede haber entre un vehículo anotado y un
@@ -30,18 +32,19 @@ def map_dataset_to_observations(dataset: dict,
     """
     fps: float = dataset['fps']
     cars: List[Dict] = dataset['cars'].copy()
-    tracked_objects_list: List[TrackedObject] = list(tracked_objects)
-    # 1. Reordenar tracked_objects por su orden de llegada a la línea final.
-    tracked_objects_list.sort(key=lambda tobj: tobj.find_closest_detection_to_line(line).frame)
+    tracked_objects_h_list: List[TrackedObject] = list(tracked_objects_h)
+    # 1. Reordenar tracked_objects_h por su orden de llegada a la línea final.
+    tracked_objects_h_list.sort(key=lambda tobj: tobj.find_closest_detection_to_line(line).frame)
     # 2. Crear el diccionario de coches anotados y la lista de objetos seguidos con el
     # emparejamiento correcto.
     dataset_cars_ids_matched: List[int] = []
     tracked_objects_matched: List[TrackedObject] = []
+    tracked_objects_h_matched: List[TrackedObject] = []
     cars_matched: List[Dict] = []
     id_ = 0
-    t = tqdm(total=len(tracked_objects_list), desc='Mapping dataset to tracked objects.')
-    for tracked_object in tracked_objects_list:
-        time_passed_line = tracked_object.find_closest_detection_to_line(line).frame / 50.0
+    t = tqdm(total=len(tracked_objects_h_list), desc='Mapping dataset to tracked objects.')
+    for tracked_object_h in tracked_objects_h_list:
+        time_passed_line = tracked_object_h.find_closest_detection_to_line(line).frame / fps
         # Vehículos del dataset candidatos.
         candidates = [car for car in cars
                       if car['carId'] not in dataset_cars_ids_matched and
@@ -55,15 +58,18 @@ def map_dataset_to_observations(dataset: dict,
             dataset_cars_ids_matched.append(candidate['carId'])
             # Copiar los datos para editar sus ids y mantener los originales.
             candidate = candidate.copy()
-            tracked_object = copy(tracked_object)
+            tracked_object = copy(tracked_objects[tracked_object_h.id])
+            tracked_object_h = copy(tracked_object_h)
             # Asignar el nuevo id y actualizarlo.
             candidate['carId'] = id_
             tracked_object.id = id_
+            tracked_object_h.id = id_
             id_ += 1
             # Realizar el emparejamiento.
             tracked_objects_matched.append(tracked_object)
+            tracked_objects_h_matched.append(tracked_object_h)
             cars_matched.append(candidate)
         t.update()
     tracked_objects_mapped = TrackedObjects()
-    tracked_objects_mapped.tracked_objects = tracked_objects_matched
+    tracked_objects_mapped.tracked_objects = tracked_objects_h_matched
     return cars_matched, tracked_objects_mapped
