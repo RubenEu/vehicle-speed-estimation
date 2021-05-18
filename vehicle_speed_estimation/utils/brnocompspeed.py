@@ -71,4 +71,4 @@ def map_dataset_to_observations(dataset: dict,
     tracked_objects_mapped.tracked_objects = tracked_objects_matched
     tracked_objects_h_mapped = TrackedObjects()
     tracked_objects_h_mapped.tracked_objects = tracked_objects_h_matched
-    return cars_matched, tracked_objects_mapped, tracked_objects_mapped
+    return cars_matched, tracked_objects_mapped, tracked_objects_h_mapped
