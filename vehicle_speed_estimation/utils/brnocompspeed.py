@@ -11,17 +11,14 @@ def map_dataset_to_observations(dataset: dict,
                                 tracked_objects: TrackedObjects,
                                 tracked_objects_h: TrackedObjects,
                                 line: Tuple[Point2D, Point2D],
-                                max_time_diff: float = 0.4) -> Tuple[List[Dict], TrackedObjects]:
+                                max_time_diff: float = 0.4) -> Tuple[List[Dict],
+                                                                     TrackedObjects,
+                                                                     TrackedObjects]:
     """Función para establecer una correspondencia entre los vehículos detectados en el seguimiento
     y los vehículos anotados en el dataset.
 
-    TODO:
-        - Añadir estructuras de ``TrackedObjects`` extra para realizar la ordenación en ellas
-        también. Esto es útil para reordenar tanto las que poseen la homografía, como las que no,
-        ya que la ordenación se realiza sobre la homografiada.
-
     :param dataset: información de la sesión del dataset BrnoCompSpeed.
-    :param tracked_objects_h: estructura de datos de los objetos seguidos.
+    :param tracked_objects: estructura de datos de los objetos seguidos.
     :param tracked_objects_h: estructura de datos de los objetos seguidos con la homografía aplicada.
     :param line: línea que se usará para comparar el instante en que pasaron los vehículos (anotados
     y seguidos).
@@ -71,5 +68,7 @@ def map_dataset_to_observations(dataset: dict,
             cars_matched.append(candidate)
         t.update()
     tracked_objects_mapped = TrackedObjects()
-    tracked_objects_mapped.tracked_objects = tracked_objects_h_matched
-    return cars_matched, tracked_objects_mapped
+    tracked_objects_mapped.tracked_objects = tracked_objects_matched
+    tracked_objects_h_mapped = TrackedObjects()
+    tracked_objects_h_mapped.tracked_objects = tracked_objects_h_matched
+    return cars_matched, tracked_objects_mapped, tracked_objects_mapped
