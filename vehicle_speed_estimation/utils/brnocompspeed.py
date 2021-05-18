@@ -12,6 +12,7 @@ def map_dataset_to_observations(dataset: dict,
                                 tracked_objects_h: TrackedObjects,
                                 line: Tuple[Point2D, Point2D],
                                 max_time_diff: float = 0.4,
+                                only_match_with_valid_cars: bool = False,
                                 verbose: bool = False) -> Tuple[List[Dict], TrackedObjects,
                                                                 TrackedObjects]:
     """Función para establecer una correspondencia entre los vehículos detectados en el seguimiento
@@ -24,6 +25,8 @@ def map_dataset_to_observations(dataset: dict,
     y seguidos).
     :param max_time_diff: tiempo máximo de diferencia que puede haber entre un vehículo anotado y un
     vehículo detectado al pasar la línea indicada.
+    :param only_match_with_valid_cars: indica si se realizará el matching únicamente con vehículos
+    válidos.
     :param verbose: indica si se quiere mostrar la barra de progreso o no.
     :return: lista de los vehículos anotados y estructura de los objetos seguidos indexadas en el
     mismo orden de correspondencia.
@@ -48,6 +51,10 @@ def map_dataset_to_observations(dataset: dict,
         candidates = [car for car in cars
                       if car['carId'] not in dataset_cars_ids_matched and
                       abs(car['timeIntersectionLastShifted'] - time_passed_line) < max_time_diff]
+        # Si se eligió hacer matching únicamente con vehículos válidos, filtrar los candidatos solo
+        # válidos.
+        if only_match_with_valid_cars:
+            candidates = [car for car in candidates if car['valid']]
         # Ordenarlos por el que pasó en el instante más cercano y realizar el emparejamiento con él.
         if len(candidates) > 0:
             candidates.sort(
