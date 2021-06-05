@@ -15,8 +15,7 @@ Vehicle Speed Estimation
 
 
 
-
-Modelos de estimación de velocidad de vehículos en un plano utilizando técnicas de homografía y suavizados de posiciones.
+Speed estimation models for vehicles using homography and kernel regression.
 
 
 * Free software: MIT license
@@ -26,7 +25,11 @@ Modelos de estimación de velocidad de vehículos en un plano utilizando técnic
 Features
 --------
 
-* TODO
+* Wrapper for speed estimation models.
+* Homography tools to work with the sequence in the homography.
+* Average speed estimation model based on the initial and final position.
+* Instantaneous speed based on the increments of positions.
+* Nadaraya-watson estimator derivated to calculate the instantaneous speed.
 
 Credits
 -------
